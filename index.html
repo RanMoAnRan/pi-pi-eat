@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0f17" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>ππ今天吃什么</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="header">
+        <h1 class="title">ππ今天吃什么</h1>
+        <p class="subtitle" id="todayText">—</p>
+      </header>
+
+      <section class="card" aria-label="日历">
+        <div class="calHeader">
+          <div class="calTopRow">
+            <div class="calMonth" id="monthText">—</div>
+            <div class="seedControl" aria-label="切换默认开始">
+              <div class="seg segSmall" role="group" aria-label="设置每月 1 号的起点">
+                <button class="segBtn segBtnSmall" id="seedAD" type="button">AD</button>
+                <button class="segBtn segBtnSmall" id="seedD3" type="button">D3</button>
+              </div>
+            </div>
+          </div>
+          <div class="calLegend">
+            <span class="pill pillAccent" id="todayPill">今天：—</span>
+            <span class="pill" id="rulePill">规则：—</span>
+          </div>
+        </div>
+
+        <div class="calGrid" aria-label="本月日历">
+          <div class="calWeekday" aria-hidden="true">一</div>
+          <div class="calWeekday" aria-hidden="true">二</div>
+          <div class="calWeekday" aria-hidden="true">三</div>
+          <div class="calWeekday" aria-hidden="true">四</div>
+          <div class="calWeekday" aria-hidden="true">五</div>
+          <div class="calWeekday" aria-hidden="true">六</div>
+          <div class="calWeekday" aria-hidden="true">日</div>
+          <div id="calendarGrid" class="calDays" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="今日设置">
+        <div class="choiceRow">
+          <div class="choiceLabel">今日选择</div>
+          <div class="choiceValue choiceValueSmall" id="choiceValue">—</div>
+        </div>
+        <p class="hint" id="hintText"></p>
+
+        <div class="actions">
+          <button class="btn" id="toggleBtn" type="button">切换今天</button>
+          <button class="btn btnGhost" id="resetBtn" type="button">按轮换</button>
+        </div>
+      </section>
+
+      <section class="card cardSmall" aria-label="安装">
+        <div class="installRow">
+          <div class="installTitle">安装到桌面</div>
+          <button class="btn btnGhost" id="installBtn" type="button" hidden>安装</button>
+        </div>
+        <p class="hint" id="installHint">—</p>
+      </section>
+
+      <footer class="footer">
+        <span id="statusText"></span>
+      </footer>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

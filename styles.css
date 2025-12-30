@@ -1,0 +1,375 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0b0f17;
+  --card: rgba(255, 255, 255, 0.06);
+  --cardBorder: rgba(255, 255, 255, 0.10);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.65);
+  --muted2: rgba(255, 255, 255, 0.45);
+  --accent: #7c5cff;
+  --accent2: rgba(124, 92, 255, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(124, 92, 255, 0.20), transparent 60%),
+    radial-gradient(900px 600px at 80% 30%, rgba(255, 255, 255, 0.10), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-size: 22px;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--cardBorder);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.card + .card {
+  margin-top: 12px;
+}
+
+.cardSmall {
+  padding: 14px 16px;
+}
+
+.calHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.calTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.seedControl {
+  display: flex;
+  align-items: center;
+}
+
+.calMonth {
+  font-weight: 750;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.calLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+
+.pillAccent {
+  border-color: rgba(124, 92, 255, 0.45);
+  background: var(--accent2);
+  color: var(--text);
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.calWeekday {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted2);
+  padding: 4px 0;
+}
+
+.calDays {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dayCell {
+  min-height: 54px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 8px 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.dayCellEmpty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.dayNum {
+  font-weight: 650;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dayMeta {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--muted);
+  letter-spacing: 0.6px;
+}
+
+.dayMetaOverride {
+  color: var(--text);
+}
+
+.dayCell.isToday {
+  border-color: rgba(255, 210, 77, 0.92);
+  background: linear-gradient(180deg, rgba(255, 210, 77, 0.30), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 77, 0.18) inset,
+    0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+.dayCell.isToday .dayNum {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+}
+
+.dayCell.isToday .dayMeta {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  letter-spacing: 0.9px;
+}
+
+.choiceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.choiceLabel {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.choiceValue {
+  font-size: 42px;
+  font-weight: 750;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.choiceValueSmall {
+  font-size: 34px;
+}
+
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted2);
+  font-size: 13px;
+  line-height: 1.45;
+  min-height: 1.45em;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.seedRow {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.seedLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.seg {
+  display: inline-flex;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.segSmall {
+  border-radius: 10px;
+}
+
+.segBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 12px;
+  font-weight: 750;
+  letter-spacing: 0.6px;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 52px;
+}
+
+.segBtnSmall {
+  padding: 7px 10px;
+  min-width: 46px;
+}
+
+.segBtn.isActive {
+  background: var(--accent2);
+  color: var(--text);
+}
+
+.segBtn:active {
+  transform: translateY(1px);
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.95), rgba(124, 92, 255, 0.75));
+  color: white;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 650;
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnGhost {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.installRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.installTitle {
+  font-weight: 650;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 14px;
+  color: var(--muted2);
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7fb;
+    --card: rgba(10, 12, 18, 0.04);
+    --cardBorder: rgba(10, 12, 18, 0.10);
+    --text: rgba(10, 12, 18, 0.92);
+    --muted: rgba(10, 12, 18, 0.60);
+    --muted2: rgba(10, 12, 18, 0.45);
+  }
+
+  body {
+    background: radial-gradient(1200px 800px at 10% 10%, rgba(124, 92, 255, 0.22), transparent 60%),
+      radial-gradient(900px 600px at 80% 20%, rgba(10, 12, 18, 0.06), transparent 55%),
+      var(--bg);
+  }
+
+  .btn {
+    border-color: rgba(10, 12, 18, 0.12);
+  }
+
+  .btnGhost {
+    background: rgba(10, 12, 18, 0.04);
+    border-color: rgba(10, 12, 18, 0.10);
+  }
+
+  .seg {
+    border-color: rgba(10, 12, 18, 0.10);
+    background: rgba(10, 12, 18, 0.03);
+  }
+
+  .pill {
+    border-color: rgba(10, 12, 18, 0.10);
+    background: rgba(10, 12, 18, 0.03);
+  }
+
+  .pillAccent {
+    border-color: rgba(124, 92, 255, 0.40);
+    background: rgba(124, 92, 255, 0.12);
+  }
+
+  .dayCell {
+    border-color: rgba(10, 12, 18, 0.10);
+    background: rgba(10, 12, 18, 0.03);
+  }
+
+  .dayCell.isToday {
+    border-color: rgba(245, 158, 11, 0.70);
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.22), rgba(10, 12, 18, 0.02));
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.10) inset,
+      0 10px 20px rgba(10, 12, 18, 0.08);
+  }
+}
