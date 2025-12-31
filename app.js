@@ -113,10 +113,6 @@ function addMonths(monthDate, delta) {
   return new Date(monthDate.getFullYear(), monthDate.getMonth() + delta, 1, 12, 0, 0, 0);
 }
 
-function isSameMonth(a, b) {
-  return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
-}
-
 function daysInMonth(date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 }
@@ -125,21 +121,12 @@ function weekdayIndexMondayFirst(date) {
   return (date.getDay() + 6) % 7; // Mon=0 ... Sun=6
 }
 
-function renderCalendar(monthDate, today) {
-  const monthText = document.getElementById("monthText");
-  const calendarGrid = document.getElementById("calendarGrid");
-
-  const monthLabel = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "long",
-  }).format(monthDate);
-  monthText.textContent = monthLabel;
-
+function renderMonthGrid(targetEl, monthDate, today) {
   const first = startOfMonth(monthDate);
   const leadingBlanks = weekdayIndexMondayFirst(first);
   const count = daysInMonth(monthDate);
 
-  calendarGrid.innerHTML = "";
+  targetEl.innerHTML = "";
 
   const totalCells = leadingBlanks + count;
   const rows = Math.ceil(totalCells / 7);
@@ -152,7 +139,7 @@ function renderCalendar(monthDate, today) {
 
     if (dayIndex < 1 || dayIndex > count) {
       cell.classList.add("dayCellEmpty");
-      calendarGrid.appendChild(cell);
+      targetEl.appendChild(cell);
       continue;
     }
 
@@ -184,8 +171,27 @@ function renderCalendar(monthDate, today) {
       cell.setAttribute("data-date", dateKey);
     }
 
-    calendarGrid.appendChild(cell);
+    targetEl.appendChild(cell);
   }
+}
+
+function renderCalendar(monthDate, today) {
+  const monthText = document.getElementById("monthText");
+  const prevGrid = document.getElementById("calendarGridPrev");
+  const currentGrid = document.getElementById("calendarGrid");
+  const nextGrid = document.getElementById("calendarGridNext");
+
+  if (!monthText || !prevGrid || !currentGrid || !nextGrid) return;
+
+  const monthLabel = new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+  }).format(monthDate);
+  monthText.textContent = monthLabel;
+
+  renderMonthGrid(prevGrid, addMonths(monthDate, -1), today);
+  renderMonthGrid(currentGrid, monthDate, today);
+  renderMonthGrid(nextGrid, addMonths(monthDate, 1), today);
 }
 
 function render() {
@@ -230,18 +236,9 @@ function render() {
   statusText.textContent = persistText ? `${net} · ${persistText}` : net;
   renderCalendar(viewMonth, today);
 
-  const viewingThisMonth = isSameMonth(viewMonth, today);
-  toggleBtn.textContent = viewingThisMonth ? "切换今天" : "回到今天";
+  toggleBtn.textContent = "回到今天";
   toggleBtn.onclick = () => {
-    if (!isSameMonth(viewMonth, today)) {
-      viewMonth = startOfMonth(today);
-      render();
-      return;
-    }
-
-    const current = getChoiceForDate(today).choice;
-    const next = current === "AD" ? "D3" : "AD";
-    setOverrideForToday(dateKey, next);
+    viewMonth = startOfMonth(today);
     render();
   };
 
@@ -279,48 +276,127 @@ function setupSeedUI() {
 }
 
 function setupMonthSwipe() {
-  const swipeArea = document.getElementById("calendarGrid");
-  if (!swipeArea) return;
+  const viewport = document.getElementById("calendarViewport");
+  const track = document.getElementById("calendarTrack");
+  if (!viewport || !track) return;
 
   let activePointerId = null;
   let startX = 0;
   let startY = 0;
+  let isHorizontal = null;
+  let animating = false;
 
   const thresholdPx = 60;
   const slope = 1.2; // abs(dx) 需要明显大于 abs(dy)
+  const settleMs = 240;
+
+  function viewportWidth() {
+    return viewport.getBoundingClientRect().width;
+  }
+
+  function restOffset() {
+    return -viewportWidth();
+  }
+
+  function setTranslate(x, withTransition) {
+    track.style.transition = withTransition ? `transform ${settleMs}ms cubic-bezier(0.2, 0.8, 0.2, 1)` : "none";
+    track.style.transform = `translate3d(${x}px, 0, 0)`;
+  }
+
+  function resetToCenter() {
+    setTranslate(restOffset(), false);
+  }
+
+  function animateTo(x, onDone) {
+    animating = true;
+    setTranslate(x, true);
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      track.removeEventListener("transitionend", handler);
+      track.style.transition = "none";
+      animating = false;
+      onDone?.();
+    };
+
+    const handler = (ev) => {
+      if (ev.propertyName !== "transform") return;
+      finish();
+    };
+
+    track.addEventListener("transitionend", handler);
+    window.setTimeout(finish, settleMs + 80);
+  }
 
   function shiftMonth(delta) {
     if (!viewMonth) viewMonth = startOfMonth(new Date());
     viewMonth = addMonths(viewMonth, delta);
     render();
+    requestAnimationFrame(resetToCenter);
   }
 
-  swipeArea.addEventListener("pointerdown", (e) => {
+  resetToCenter();
+  window.addEventListener("resize", () => requestAnimationFrame(resetToCenter));
+
+  viewport.addEventListener("pointerdown", (e) => {
     if (e.button != null && e.button !== 0) return;
+    if (animating) return;
     activePointerId = e.pointerId;
     startX = e.clientX;
     startY = e.clientY;
-    swipeArea.setPointerCapture?.(e.pointerId);
+    isHorizontal = null;
+    viewport.setPointerCapture?.(e.pointerId);
+    track.style.transition = "none";
   });
 
-  swipeArea.addEventListener("pointerup", (e) => {
+  viewport.addEventListener("pointermove", (e) => {
+    if (activePointerId == null || e.pointerId !== activePointerId) return;
+    if (animating) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (isHorizontal == null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      isHorizontal = Math.abs(dx) > Math.abs(dy) * slope;
+    }
+
+    if (!isHorizontal) return;
+    setTranslate(restOffset() + dx, false);
+  });
+
+  viewport.addEventListener("pointerup", (e) => {
     if (activePointerId == null || e.pointerId !== activePointerId) return;
     activePointerId = null;
 
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    if (Math.abs(dx) < thresholdPx) return;
-    if (Math.abs(dx) < Math.abs(dy) * slope) return;
+    if (isHorizontal !== true) {
+      resetToCenter();
+      return;
+    }
 
+    if (Math.abs(dx) < thresholdPx || Math.abs(dx) < Math.abs(dy) * slope) {
+      animateTo(restOffset(), () => {});
+      return;
+    }
+
+    const w = viewportWidth();
     // 日历常见手势：左滑 => 下一个月；右滑 => 上一个月
-    if (dx < 0) shiftMonth(1);
-    else shiftMonth(-1);
+    if (dx < 0) {
+      animateTo(restOffset() - w, () => shiftMonth(1));
+      return;
+    }
+    animateTo(restOffset() + w, () => shiftMonth(-1));
   });
 
-  swipeArea.addEventListener("pointercancel", (e) => {
+  viewport.addEventListener("pointercancel", (e) => {
     if (activePointerId == null || e.pointerId !== activePointerId) return;
     activePointerId = null;
+    resetToCenter();
   });
 }
 

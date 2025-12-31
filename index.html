@@ -44,7 +44,13 @@
           <div class="calWeekday" aria-hidden="true">五</div>
           <div class="calWeekday" aria-hidden="true">六</div>
           <div class="calWeekday" aria-hidden="true">日</div>
-          <div id="calendarGrid" class="calDays" aria-live="polite"></div>
+          <div id="calendarViewport" class="calDaysViewport" aria-live="polite">
+            <div id="calendarTrack" class="calDaysTrack">
+              <div id="calendarGridPrev" class="calDays calDaysPane" aria-hidden="true"></div>
+              <div id="calendarGrid" class="calDays calDaysPane"></div>
+              <div id="calendarGridNext" class="calDays calDaysPane" aria-hidden="true"></div>
+            </div>
+          </div>
         </div>
       </section>
 

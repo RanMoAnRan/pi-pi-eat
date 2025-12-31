@@ -60,10 +60,19 @@ body {
   backdrop-filter: blur(10px);
 }
 
-#calendarGrid {
+#calendarViewport {
   touch-action: pan-y;
   -webkit-user-select: none;
   user-select: none;
+}
+
+@media (hover: hover) {
+  #calendarViewport {
+    cursor: grab;
+  }
+  #calendarViewport:active {
+    cursor: grabbing;
+  }
 }
 
 .card + .card {
@@ -140,6 +149,23 @@ body {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
+}
+
+.calDaysViewport {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.calDaysTrack {
+  display: flex;
+  width: 300%;
+  transform: translate3d(-33.333333%, 0, 0);
+  will-change: transform;
+}
+
+.calDaysPane {
+  flex: 0 0 33.333333%;
 }
 
 .dayCell {
