@@ -1,7 +1,78 @@
 const STORAGE_PREFIX = "eatWhat.";
 const KEY_SEED_FIRST = `${STORAGE_PREFIX}seedFirstChoice`;
+const KEY_UI_RELOAD_PENDING = `${STORAGE_PREFIX}ui.reloadPending`;
 const ANCHOR_YMD = { y: 2025, m: 12, d: 30 }; // 固定起点（本地日期）
 let viewMonth = null; // 当前日历展示的月份（本地时间）
+
+function ensureReloadOverlay() {
+  let el = document.getElementById("reloadOverlay");
+  if (el) return el;
+
+  el = document.createElement("div");
+  el.id = "reloadOverlay";
+  el.className = "loadingOverlay";
+  el.hidden = true;
+  el.setAttribute("role", "status");
+  el.setAttribute("aria-live", "polite");
+  el.setAttribute("aria-label", "刷新中");
+
+  const spinner = document.createElement("div");
+  spinner.className = "spinner";
+  el.appendChild(spinner);
+
+  document.body.appendChild(el);
+  return el;
+}
+
+function showReloadOverlay() {
+  const el = ensureReloadOverlay();
+  el.hidden = false;
+}
+
+function hideReloadOverlay() {
+  const el = document.getElementById("reloadOverlay");
+  if (!el) return;
+  el.hidden = true;
+}
+
+function triggerPageReload() {
+  try {
+    window.sessionStorage?.setItem(KEY_UI_RELOAD_PENDING, String(Date.now()));
+  } catch {
+    // ignore
+  }
+  showReloadOverlay();
+  requestAnimationFrame(() => window.location.reload());
+}
+
+function setupReloadSpinner() {
+  let pending = null;
+  try {
+    pending = window.sessionStorage?.getItem(KEY_UI_RELOAD_PENDING);
+  } catch {
+    pending = null;
+  }
+  if (!pending) return;
+
+  showReloadOverlay();
+
+  const stop = () => {
+    try {
+      window.sessionStorage?.removeItem(KEY_UI_RELOAD_PENDING);
+    } catch {
+      // ignore
+    }
+    hideReloadOverlay();
+  };
+
+  if (document.readyState === "complete") {
+    stop();
+    return;
+  }
+
+  window.addEventListener("load", stop, { once: true });
+  window.setTimeout(stop, 8000);
+}
 
 function formatDateKey(date) {
   const year = date.getFullYear();
@@ -242,7 +313,7 @@ function render() {
   };
 
   resetBtn.onclick = () => {
-    window.location.reload();
+    triggerPageReload();
   };
 }
 
@@ -432,11 +503,19 @@ function setupInstallUI() {
   const installHint = document.getElementById("installHint");
   let deferredPrompt = null;
 
+  function isEdge() {
+    return /edg/i.test(navigator.userAgent);
+  }
+
   function androidInstallTip() {
-    if (!window.isSecureContext) {
-      return "Android：需要 https（或 localhost）才能安装；用 http 局域网地址通常不行。";
-    }
     return "Android：请用 Chrome 打开（非微信/QQ内置浏览器），菜单 → 安装应用/添加到主屏幕。";
+  }
+
+  function desktopInstallTip() {
+    if (isEdge()) {
+      return "Edge：请用右上角 … → 应用 → 安装此站点（或点地址栏右侧的安装图标）。";
+    }
+    return "请用浏览器菜单安装（或点地址栏右侧的安装图标）。";
   }
 
   function updateHint() {
@@ -452,7 +531,19 @@ function setupInstallUI() {
       return;
     }
 
-    installHint.textContent = androidInstallTip();
+    if (!window.isSecureContext) {
+      installHint.textContent = "需要 https（或 localhost）才能安装；用 http 局域网地址通常不行。";
+      installBtn.hidden = true;
+      return;
+    }
+
+    if (!deferredPrompt) {
+      installHint.textContent = /android/i.test(navigator.userAgent) ? androidInstallTip() : desktopInstallTip();
+      installBtn.hidden = true;
+      return;
+    }
+
+    installHint.textContent = "点击「安装」。";
     installBtn.hidden = false;
     installBtn.disabled = false;
   }
@@ -495,6 +586,7 @@ async function registerServiceWorker() {
 window.addEventListener("online", render);
 window.addEventListener("offline", render);
 
+setupReloadSpinner();
 setupInstallUI();
 setupSeedUI();
 setupMonthSwipe();

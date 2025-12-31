@@ -336,6 +336,36 @@ body {
   border-color: rgba(255, 255, 255, 0.16);
 }
 
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.loadingOverlay[hidden] {
+  display: none;
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.24);
+  border-top-color: rgba(124, 92, 255, 0.95);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .installRow {
   display: flex;
   align-items: center;
@@ -378,6 +408,15 @@ body {
   .btnGhost {
     background: rgba(10, 12, 18, 0.04);
     border-color: rgba(10, 12, 18, 0.10);
+  }
+
+  .loadingOverlay {
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .spinner {
+    border-color: rgba(10, 12, 18, 0.14);
+    border-top-color: rgba(124, 92, 255, 0.92);
   }
 
   .seg {
