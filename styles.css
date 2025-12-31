@@ -66,6 +66,7 @@ body {
   touch-action: pan-y;
   -webkit-user-select: none;
   user-select: none;
+  transition: height 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @media (hover: hover) {
@@ -151,6 +152,7 @@ body {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
+  align-content: start;
 }
 
 .calDaysViewport {
@@ -165,6 +167,7 @@ body {
   transform: translate3d(-33.333333%, 0, 0);
   will-change: transform;
   gap: var(--calendarPaneGap);
+  align-items: flex-start;
 }
 
 .calDaysPane {

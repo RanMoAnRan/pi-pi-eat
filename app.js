@@ -251,6 +251,7 @@ function renderCalendar(monthDate, today) {
   const prevGrid = document.getElementById("calendarGridPrev");
   const currentGrid = document.getElementById("calendarGrid");
   const nextGrid = document.getElementById("calendarGridNext");
+  const viewport = document.getElementById("calendarViewport");
 
   if (!monthText || !prevGrid || !currentGrid || !nextGrid) return;
 
@@ -263,6 +264,11 @@ function renderCalendar(monthDate, today) {
   renderMonthGrid(prevGrid, addMonths(monthDate, -1), today);
   renderMonthGrid(currentGrid, monthDate, today);
   renderMonthGrid(nextGrid, addMonths(monthDate, 1), today);
+
+  if (viewport) {
+    const h = currentGrid.getBoundingClientRect().height;
+    if (h > 0) viewport.style.height = `${Math.ceil(h)}px`;
+  }
 }
 
 function render() {
@@ -347,6 +353,9 @@ function setupSeedUI() {
 function setupMonthSwipe() {
   const viewport = document.getElementById("calendarViewport");
   const track = document.getElementById("calendarTrack");
+  const prevGrid = document.getElementById("calendarGridPrev");
+  const currentGrid = document.getElementById("calendarGrid");
+  const nextGrid = document.getElementById("calendarGridNext");
   if (!viewport || !track) return;
 
   let activePointerId = null;
@@ -359,6 +368,28 @@ function setupMonthSwipe() {
   const thresholdPx = 60;
   const slope = 1.2; // abs(dx) 需要明显大于 abs(dy)
   const settleMs = 240;
+
+  function paneHeight(el) {
+    if (!el) return 0;
+    const h = el.getBoundingClientRect().height;
+    return Number.isFinite(h) ? h : 0;
+  }
+
+  function setViewportHeight(px, withTransition) {
+    if (!(px > 0)) return;
+    viewport.style.transition = withTransition ? "" : "none";
+    viewport.style.height = `${Math.ceil(px)}px`;
+  }
+
+  function syncViewportToCurrent(withTransition) {
+    setViewportHeight(paneHeight(currentGrid), withTransition);
+  }
+
+  function setViewportHeightForSwipe(dx, withTransition) {
+    const currentH = paneHeight(currentGrid);
+    const targetH = dx < 0 ? paneHeight(nextGrid) : dx > 0 ? paneHeight(prevGrid) : 0;
+    setViewportHeight(Math.max(currentH, targetH), withTransition);
+  }
 
   function viewportWidth() {
     return viewport.getBoundingClientRect().width;
@@ -435,7 +466,10 @@ function setupMonthSwipe() {
   resetToCenter();
   window.addEventListener("resize", () => {
     refreshMetrics();
-    requestAnimationFrame(resetToCenter);
+    requestAnimationFrame(() => {
+      resetToCenter();
+      syncViewportToCurrent(true);
+    });
   });
 
   viewport.addEventListener("pointerdown", (e) => {
@@ -463,6 +497,7 @@ function setupMonthSwipe() {
     }
 
     if (!isHorizontal) return;
+    setViewportHeightForSwipe(dx, false);
     setTranslate(restOffset() + dx, false);
   });
 
@@ -475,19 +510,22 @@ function setupMonthSwipe() {
 
     if (isHorizontal !== true) {
       resetToCenter();
+      syncViewportToCurrent(true);
       return;
     }
 
     if (Math.abs(dx) < thresholdPx || Math.abs(dx) < Math.abs(dy) * slope) {
-      animateTo(restOffset(), () => {});
+      animateTo(restOffset(), () => syncViewportToCurrent(true));
       return;
     }
 
     // 日历常见手势：左滑 => 下一个月；右滑 => 上一个月
     if (dx < 0) {
+      setViewportHeightForSwipe(dx, true);
       animateTo(restOffset() - stepWidth(), () => shiftMonth(1));
       return;
     }
+    setViewportHeightForSwipe(dx, true);
     animateTo(restOffset() + stepWidth(), () => shiftMonth(-1));
   });
 
@@ -495,6 +533,7 @@ function setupMonthSwipe() {
     if (activePointerId == null || e.pointerId !== activePointerId) return;
     activePointerId = null;
     resetToCenter();
+    syncViewportToCurrent(true);
   });
 }
 
