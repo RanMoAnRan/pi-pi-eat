@@ -60,6 +60,12 @@ body {
   backdrop-filter: blur(10px);
 }
 
+#calendarGrid {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .card + .card {
   margin-top: 12px;
 }

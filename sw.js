@@ -1,4 +1,4 @@
-const CACHE_NAME = "eat-what-pwa-v5";
+const CACHE_NAME = "eat-what-pwa-v8";
 
 function assetUrl(path) {
   return new URL(path, self.registration.scope).toString();

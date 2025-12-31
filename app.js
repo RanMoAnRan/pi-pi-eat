@@ -1,6 +1,7 @@
 const STORAGE_PREFIX = "eatWhat.";
 const KEY_SEED_FIRST = `${STORAGE_PREFIX}seedFirstChoice`;
 const ANCHOR_YMD = { y: 2025, m: 12, d: 30 }; // 固定起点（本地日期）
+let viewMonth = null; // 当前日历展示的月份（本地时间）
 
 function formatDateKey(date) {
   const year = date.getFullYear();
@@ -108,6 +109,14 @@ function startOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1, 12, 0, 0, 0);
 }
 
+function addMonths(monthDate, delta) {
+  return new Date(monthDate.getFullYear(), monthDate.getMonth() + delta, 1, 12, 0, 0, 0);
+}
+
+function isSameMonth(a, b) {
+  return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+}
+
 function daysInMonth(date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 }
@@ -116,19 +125,19 @@ function weekdayIndexMondayFirst(date) {
   return (date.getDay() + 6) % 7; // Mon=0 ... Sun=6
 }
 
-function renderCalendar(today) {
+function renderCalendar(monthDate, today) {
   const monthText = document.getElementById("monthText");
   const calendarGrid = document.getElementById("calendarGrid");
 
   const monthLabel = new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "long",
-  }).format(today);
+  }).format(monthDate);
   monthText.textContent = monthLabel;
 
-  const first = startOfMonth(today);
+  const first = startOfMonth(monthDate);
   const leadingBlanks = weekdayIndexMondayFirst(first);
-  const count = daysInMonth(today);
+  const count = daysInMonth(monthDate);
 
   calendarGrid.innerHTML = "";
 
@@ -147,9 +156,10 @@ function renderCalendar(today) {
       continue;
     }
 
-    const date = new Date(today.getFullYear(), today.getMonth(), dayIndex, 12, 0, 0, 0);
+    const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), dayIndex, 12, 0, 0, 0);
     const dateKey = formatDateKey(date);
     const isToday =
+      today &&
       date.getFullYear() === today.getFullYear() &&
       date.getMonth() === today.getMonth() &&
       date.getDate() === today.getDate();
@@ -181,6 +191,7 @@ function renderCalendar(today) {
 function render() {
   const today = new Date();
   const dateKey = formatDateKey(today);
+  if (!viewMonth) viewMonth = startOfMonth(today);
 
   const weekday = new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(today);
   const dateText = new Intl.DateTimeFormat("zh-CN", {
@@ -196,6 +207,7 @@ function render() {
   const resetBtn = document.getElementById("resetBtn");
   const todayPill = document.getElementById("todayPill");
   const rulePill = document.getElementById("rulePill");
+  const toggleBtn = document.getElementById("toggleBtn");
 
   todayText.textContent = `${dateText} · ${weekday}`;
 
@@ -216,9 +228,17 @@ function render() {
   const persistText =
     storagePersisted === true ? "存储已固定" : storagePersisted === false ? "存储可能被系统清理" : null;
   statusText.textContent = persistText ? `${net} · ${persistText}` : net;
-  renderCalendar(today);
+  renderCalendar(viewMonth, today);
 
-  document.getElementById("toggleBtn").onclick = () => {
+  const viewingThisMonth = isSameMonth(viewMonth, today);
+  toggleBtn.textContent = viewingThisMonth ? "切换今天" : "回到今天";
+  toggleBtn.onclick = () => {
+    if (!isSameMonth(viewMonth, today)) {
+      viewMonth = startOfMonth(today);
+      render();
+      return;
+    }
+
     const current = getChoiceForDate(today).choice;
     const next = current === "AD" ? "D3" : "AD";
     setOverrideForToday(dateKey, next);
@@ -256,6 +276,52 @@ function setupSeedUI() {
   };
 
   paint();
+}
+
+function setupMonthSwipe() {
+  const swipeArea = document.getElementById("calendarGrid");
+  if (!swipeArea) return;
+
+  let activePointerId = null;
+  let startX = 0;
+  let startY = 0;
+
+  const thresholdPx = 60;
+  const slope = 1.2; // abs(dx) 需要明显大于 abs(dy)
+
+  function shiftMonth(delta) {
+    if (!viewMonth) viewMonth = startOfMonth(new Date());
+    viewMonth = addMonths(viewMonth, delta);
+    render();
+  }
+
+  swipeArea.addEventListener("pointerdown", (e) => {
+    if (e.button != null && e.button !== 0) return;
+    activePointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    swipeArea.setPointerCapture?.(e.pointerId);
+  });
+
+  swipeArea.addEventListener("pointerup", (e) => {
+    if (activePointerId == null || e.pointerId !== activePointerId) return;
+    activePointerId = null;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (Math.abs(dx) < thresholdPx) return;
+    if (Math.abs(dx) < Math.abs(dy) * slope) return;
+
+    // 日历常见手势：左滑 => 下一个月；右滑 => 上一个月
+    if (dx < 0) shiftMonth(1);
+    else shiftMonth(-1);
+  });
+
+  swipeArea.addEventListener("pointercancel", (e) => {
+    if (activePointerId == null || e.pointerId !== activePointerId) return;
+    activePointerId = null;
+  });
 }
 
 function setupInstallUI() {
@@ -328,6 +394,7 @@ window.addEventListener("offline", render);
 
 setupInstallUI();
 setupSeedUI();
+setupMonthSwipe();
 render();
 setupStoragePersistence().finally(render);
 registerServiceWorker();
