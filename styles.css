@@ -8,6 +8,8 @@
   --muted2: rgba(255, 255, 255, 0.45);
   --accent: #7c5cff;
   --accent2: rgba(124, 92, 255, 0.14);
+  --calendarPaneGap: 36px;
+  --primaryBtnBg: linear-gradient(180deg, rgba(124, 92, 255, 0.95), rgba(124, 92, 255, 0.75));
 }
 
 * {
@@ -162,6 +164,7 @@ body {
   width: 300%;
   transform: translate3d(-33.333333%, 0, 0);
   will-change: transform;
+  gap: var(--calendarPaneGap);
 }
 
 .calDaysPane {
@@ -203,10 +206,10 @@ body {
 }
 
 .dayCell.isToday {
-  border-color: rgba(255, 210, 77, 0.92);
-  background: linear-gradient(180deg, rgba(255, 210, 77, 0.30), rgba(255, 255, 255, 0.04));
+  border-color: rgba(124, 92, 255, 0.78);
+  background: var(--primaryBtnBg);
   box-shadow:
-    0 0 0 1px rgba(255, 210, 77, 0.18) inset,
+    0 0 0 1px rgba(124, 92, 255, 0.20) inset,
     0 8px 22px rgba(0, 0, 0, 0.22);
 }
 
@@ -313,7 +316,7 @@ body {
 .btn {
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(180deg, rgba(124, 92, 255, 0.95), rgba(124, 92, 255, 0.75));
+  background: var(--primaryBtnBg);
   color: white;
   border-radius: 12px;
   padding: 10px 12px;
@@ -398,10 +401,10 @@ body {
   }
 
   .dayCell.isToday {
-    border-color: rgba(245, 158, 11, 0.70);
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.22), rgba(10, 12, 18, 0.02));
+    border-color: rgba(124, 92, 255, 0.55);
+    background: var(--primaryBtnBg);
     box-shadow:
-      0 0 0 1px rgba(245, 158, 11, 0.10) inset,
+      0 0 0 1px rgba(124, 92, 255, 0.14) inset,
       0 10px 20px rgba(10, 12, 18, 0.08);
   }
 }

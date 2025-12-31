@@ -224,11 +224,10 @@ function render() {
 
   if (source === "override") {
     hintText.textContent = "已手动指定今日选项（仅影响今天）。";
-    resetBtn.disabled = false;
   } else {
     hintText.textContent = "按天轮换：AD / D3（第一次使用默认从 AD 开始）。";
-    resetBtn.disabled = true;
   }
+  resetBtn.disabled = false;
 
   const net = navigator.onLine ? "在线" : "离线";
   const persistText =
@@ -243,8 +242,7 @@ function render() {
   };
 
   resetBtn.onclick = () => {
-    clearOverrideForToday(dateKey);
-    render();
+    window.location.reload();
   };
 }
 
@@ -285,6 +283,7 @@ function setupMonthSwipe() {
   let startY = 0;
   let isHorizontal = null;
   let animating = false;
+  let cachedPaneGap = 0;
 
   const thresholdPx = 60;
   const slope = 1.2; // abs(dx) 需要明显大于 abs(dy)
@@ -294,8 +293,32 @@ function setupMonthSwipe() {
     return viewport.getBoundingClientRect().width;
   }
 
+  function refreshMetrics() {
+    let measured = 0;
+    const panes = track.querySelectorAll(".calDaysPane");
+    if (panes.length >= 2) {
+      const first = panes[0];
+      const second = panes[1];
+      measured = second.offsetLeft - first.offsetLeft - first.offsetWidth;
+    }
+
+    if (Number.isFinite(measured) && measured > 0) {
+      cachedPaneGap = measured;
+      return;
+    }
+
+    const cs = window.getComputedStyle(track);
+    const raw = cs.columnGap || cs.gap || "0px";
+    const parsed = Number.parseFloat(raw);
+    cachedPaneGap = Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function stepWidth() {
+    return viewportWidth() + cachedPaneGap;
+  }
+
   function restOffset() {
-    return -viewportWidth();
+    return -stepWidth();
   }
 
   function setTranslate(x, withTransition) {
@@ -337,12 +360,17 @@ function setupMonthSwipe() {
     requestAnimationFrame(resetToCenter);
   }
 
+  refreshMetrics();
   resetToCenter();
-  window.addEventListener("resize", () => requestAnimationFrame(resetToCenter));
+  window.addEventListener("resize", () => {
+    refreshMetrics();
+    requestAnimationFrame(resetToCenter);
+  });
 
   viewport.addEventListener("pointerdown", (e) => {
     if (e.button != null && e.button !== 0) return;
     if (animating) return;
+    refreshMetrics();
     activePointerId = e.pointerId;
     startX = e.clientX;
     startY = e.clientY;
@@ -384,13 +412,12 @@ function setupMonthSwipe() {
       return;
     }
 
-    const w = viewportWidth();
     // 日历常见手势：左滑 => 下一个月；右滑 => 上一个月
     if (dx < 0) {
-      animateTo(restOffset() - w, () => shiftMonth(1));
+      animateTo(restOffset() - stepWidth(), () => shiftMonth(1));
       return;
     }
-    animateTo(restOffset() + w, () => shiftMonth(-1));
+    animateTo(restOffset() + stepWidth(), () => shiftMonth(-1));
   });
 
   viewport.addEventListener("pointercancel", (e) => {
